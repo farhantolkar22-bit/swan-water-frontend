@@ -10,7 +10,6 @@ export const api = {
       const data = await res.json();
       return (data && data.data && data.data.length > 0) ? data.data : RIDES_DATA;
     } catch (err) {
-      console.warn('[API Client] Backend unavailable, using local rides catalog:', err.message);
       return RIDES_DATA;
     }
   },
@@ -27,37 +26,25 @@ export const api = {
   },
 
   async createBooking(payload) {
-    try {
-      const res = await fetch(`${API_BASE}/bookings`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (!res.ok) throw new Error('Booking failed');
-      const data = await res.json();
-      return data.data || data;
-    } catch (err) {
-      console.warn('[API Client] Server offline, generating digital pass locally:', err.message);
-      const ref = `SWS-${Math.floor(10000 + Math.random() * 90000)}`;
-      return {
-        id: `bkg-${Date.now()}`,
-        bookingReference: ref,
-        reference: ref,
-        rideId: payload.rideId,
-        rideName: payload.rideName,
-        date: payload.bookingDate || payload.date,
-        timeSlot: payload.timeSlot || 'Full Day (08:30 AM - Sunset)',
-        guests: payload.guestCount || payload.guests || 1,
-        customerName: payload.customerName,
-        customerEmail: payload.customerEmail,
-        customerPhone: payload.customerPhone,
-        pricing: {
-          totalAmount: payload.totalPrice || 500
-        },
-        status: 'Confirmed',
-        createdAt: new Date().toISOString()
-      };
+    const res = await fetch(`${API_BASE}/bookings`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.message || 'Booking submission failed. Please check your details.');
     }
+    return data.data || data;
+  },
+
+  async getBookingByReference(reference) {
+    const res = await fetch(`${API_BASE}/bookings/${reference}`);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.message || 'Booking ticket not found');
+    }
+    return data.data || data;
   },
 
   // Admin APIs
@@ -67,7 +54,7 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password })
     });
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.message || 'Login failed');
     return data;
   },
@@ -106,7 +93,7 @@ export const api = {
       },
       body: JSON.stringify(payload)
     });
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.message || 'Failed to create walk-in booking');
     return data;
   },
@@ -120,7 +107,7 @@ export const api = {
       },
       body: JSON.stringify({ status })
     });
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.message || 'Failed to update status');
     return data;
   },
@@ -130,7 +117,7 @@ export const api = {
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${token}` }
     });
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.message || 'Failed to delete booking');
     return data;
   },
@@ -144,7 +131,7 @@ export const api = {
       },
       body: JSON.stringify(payload)
     });
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.message || 'Failed to update ride');
     return data;
   }

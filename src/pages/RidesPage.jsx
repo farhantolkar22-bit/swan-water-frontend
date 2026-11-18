@@ -92,8 +92,27 @@ export default function RidesPage() {
     e.preventDefault();
     setErrorMessage('');
 
-    if (!customerName.trim() || !customerPhone.trim()) {
-      setErrorMessage('Please enter your Name and WhatsApp / Phone number.');
+    const trimmedName = customerName.trim();
+    const cleanPhone = customerPhone.replace(/[^0-9]/g, '');
+
+    if (trimmedName.length < 2) {
+      setErrorMessage('Please enter your full name (at least 2 characters).');
+      return;
+    }
+
+    if (cleanPhone.length < 10) {
+      setErrorMessage('Please enter a valid 10-digit WhatsApp / Phone number.');
+      return;
+    }
+
+    if (!bookingDate) {
+      setErrorMessage('Please select a date for your visit.');
+      return;
+    }
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (bookingDate < todayStr) {
+      setErrorMessage('Booking date cannot be in the past. Please select today or a future date.');
       return;
     }
 
@@ -107,31 +126,19 @@ export default function RidesPage() {
       guests: guestCount,
       addons: selectedAddons.map(a => a.name),
       totalPrice: totalAmount,
-      customerName: customerName.trim(),
+      customerName: trimmedName,
       customerPhone: customerPhone.trim(),
-      customerEmail: customerEmail.trim() || `${customerPhone.trim().replace(/[^0-9]/g, '')}@guest.swanwatersports.com`,
+      customerEmail: customerEmail.trim() || `${cleanPhone}@guest.swanwatersports.com`,
       notes: ''
     };
 
     try {
       const res = await api.createBooking(payload);
-      const bookingData = res.data || {
-        ...payload,
-        bookingReference: `SWS-${Math.floor(10000 + Math.random() * 90000)}`,
-        status: 'Confirmed'
-      };
+      const bookingData = res.data || res;
       setConfirmedBooking(bookingData);
       window.scrollTo({ top: bookingFormRef.current ? bookingFormRef.current.offsetTop - 80 : 0, behavior: 'smooth' });
     } catch (err) {
-      // Offline fallback
-      const fallbackBooking = {
-        ...payload,
-        bookingReference: `SWS-${Math.floor(10000 + Math.random() * 90000)}`,
-        status: 'Confirmed',
-        pricing: { totalAmount }
-      };
-      setConfirmedBooking(fallbackBooking);
-      window.scrollTo({ top: bookingFormRef.current ? bookingFormRef.current.offsetTop - 80 : 0, behavior: 'smooth' });
+      setErrorMessage(err.message || 'Unable to complete reservation. Please verify your details.');
     } finally {
       setIsSubmitting(false);
     }
