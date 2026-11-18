@@ -1,0 +1,69 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    overflow-x: hidden;
+    color: #1e293b;
+    background-color: #f8fafc;
+  }
+}
+
+/* Glowing pulse indicator */
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #00bcd4;
+  box-shadow: 0 0 10px #00bcd4;
+  display: inline-block;
+  animation: pulse-glow 2s infinite ease-in-out;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.95;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0.45;
+  }
+}
+
+/* Glass card styling */
+.glass-card {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1.5px solid rgba(178, 235, 242, 0.7);
+}
+
+/* Perforation line for boarding pass */
+.ticket-perforation {
+  height: 0;
+  border-top: 2px dashed #b2ebf2;
+  position: relative;
+  margin: 16px 0;
+}
+.ticket-perforation::before,
+.ticket-perforation::after {
+  content: '';
+  position: absolute;
+  top: -12px;
+  width: 24px;
+  height: 24px;
+  background: #f8fafc;
+  border-radius: 50%;
+}
+.ticket-perforation::before {
+  left: -28px;
+}
+.ticket-perforation::after {
+  right: -28px;
+}
+
